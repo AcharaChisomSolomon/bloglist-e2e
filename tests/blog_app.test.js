@@ -109,6 +109,62 @@ describe('Blog App', () => {
                 const removeButton = page.getByRole('button', { name: 'remove' });
                 await expect(removeButton).not.toBeVisible();
             });
+
+            test("Blogs are ordered by likes", async ({ page }) => {
+                await page
+                    .getByRole("button", { name: "create new blog" })
+                    .click();
+                await page
+                    .getByTestId("title")
+                    .fill("A blog created by playwright 1");
+                await page.getByTestId("author").fill("Laaki Mluukai");
+                await page
+                    .getByTestId("url")
+                    .fill("https://www.laakimluukai.com");
+
+                await page.getByRole("button", { name: "create" }).click();
+
+                await page
+                    .getByRole("button", { name: "create new blog" })
+                    .click();
+                await page
+                    .getByTestId("title")
+                    .fill("A blog created by playwright 2");
+                await page.getByTestId("author").fill("Laaki Mluukai");
+                await page
+                    .getByTestId("url")
+                    .fill("https://www.laakimluukai.com");
+
+                await page.getByRole("button", { name: "create" }).click();
+
+                // After creating the first blog
+                let viewButtons = await page.$$('button:has-text("view")');
+                await viewButtons[0].click();
+                let likeButtons = await page.$$('button:has-text("like")');
+                await likeButtons[0].click();
+
+                // After creating the second blog
+                viewButtons = await page.$$('button:has-text("view")');
+                await viewButtons[0].click();
+                likeButtons = await page.$$('button:has-text("like")');
+                await likeButtons[1].click();
+                await page.waitForTimeout(500); // wait for 500 milliseconds
+                await likeButtons[1].click();
+                await page.waitForTimeout(500); // wait for 500 milliseconds
+                await likeButtons[1].click();
+
+                viewButtons = await page.$$('button:has-text("view")');
+                await viewButtons[0].click();
+
+                const blogs = await page.$$(".blog");
+                const firstBlog = await blogs[0].innerHTML();
+                const secondBlog = await blogs[1].innerHTML();
+                const thirdBlog = await blogs[2].innerHTML();
+
+                await expect(firstBlog).toContain("likes 3");
+                await expect(secondBlog).toContain("likes 1");
+                await expect(thirdBlog).toContain("likes 0");
+            });
         });
     });
 });
